@@ -34,6 +34,9 @@ enum  MENU_ENUM
 //	MENU_SOUND_VOL,
 	MENU_SOUND_RATE,
 	MENU_SOUND_STEREO,
+#ifdef GCW_JOYSTICK
+	MENU_ANALOG_JOY,
+#endif
 	MENU_FRAMESKIP,
 	MENU_FULLSCREEN,
 	MENU_FPS,
@@ -125,7 +128,11 @@ struct MENU_OPTIONS
   unsigned int cpuSpeed;
   unsigned int soundRate;
   unsigned int soundSync;
+#ifdef GCW_JOYSTICK
+  unsigned int analogJoy;
+#else
   unsigned int spare02;
+#endif
   unsigned int spare03;
   unsigned int spare04;
   unsigned int spare05;
@@ -166,6 +173,9 @@ s32 MenuMessageBox(const char *message1, const char *message2,
 			const char *message3, enum MENU_MESSAGE_BOX_MODE mode);
 u32 IsPreviewingState();
 
+#ifdef GCW_JOYSTICK
+extern int analogJoy;
+#endif
 
 #endif /* _MENU_H_ */
 
