@@ -443,7 +443,9 @@ int Run(int sound)
 
 	sal_VideoEnterGame(mMenuOptions.fullScreen, PAL, Memory.ROMFramesPerSecond);
 	LastPAL = PAL;
-
+#ifdef GCW_JOYSTICK
+        analogJoy = mMenuOptions.analogJoy;
+#endif
 	Settings.SoundSync = mMenuOptions.soundSync;
 	Settings.SkipFrames = mMenuOptions.frameSkip == 0 ? AUTO_FRAMERATE : mMenuOptions.frameSkip - 1;
 	sal_TimerInit(Settings.FrameTime);

@@ -5,6 +5,11 @@
 #include <sys/time.h>
 #include "sal.h"
 
+#ifdef GCW_JOYSTICK
+#include "menu.h"
+static int eo = 0;
+#endif
+
 #define PALETTE_BUFFER_LENGTH	256*2*4
 
 static SDL_Surface *mScreen = NULL;
@@ -27,6 +32,7 @@ s32 mCpuSpeedLookup[1]={0};
 	break
 
 static u32 inputHeld = 0;
+static int key_repeat_enabled = 1;
 
 static u32 sal_Input(int held)
 {
@@ -34,32 +40,77 @@ static u32 sal_Input(int held)
 	SDL_Event event;
 	int i=0;
 	u32 timer=0;
+#ifdef GCW_JOYSTICK
+        int    deadzone = 10000;
+        Sint32 x_move   = 0;
+        Sint32 y_move   = 0;
 
-	if (!SDL_PollEvent(&event)) {
+#endif
+
+	if (!SDL_PollEvent(&event)) 
+        {
 		if (held)
 			return inputHeld;
 		return 0;
-	}
+        }
 
-	Uint8 type = (event.key.state == SDL_PRESSED);
-	switch(event.key.keysym.sym) {
-		CASE(LCTRL, A);
-		CASE(LALT, B);
-		CASE(SPACE, X);
-		CASE(LSHIFT, Y);
-		CASE(TAB, L);
-		CASE(BACKSPACE, R);
-		CASE(RETURN, START);
-		CASE(ESCAPE, SELECT);
-		CASE(UP, UP);
-		CASE(DOWN, DOWN);
-		CASE(LEFT, LEFT);
-		CASE(RIGHT, RIGHT);
-		CASE(HOME, MENU);
-		default: break;
-	}
+        if(analogJoy && !key_repeat_enabled)
+        {
+            //switch off all movement keys
+            inputHeld &= ~(SAL_INPUT_LEFT );
+            inputHeld &= ~(SAL_INPUT_RIGHT);
+            inputHeld &= ~(SAL_INPUT_UP   );
+            inputHeld &= ~(SAL_INPUT_DOWN );
+        }
+
+        Uint8 type = (event.key.state == SDL_PRESSED);
+        switch(event.key.keysym.sym) 
+        {
+            CASE( LCTRL,     A      );
+            CASE( LALT,      B      );
+            CASE( SPACE,     X      );//this triggers for some reason on the gcw0 when analogue joystick is on and in a diagonal position if sdl_updatejoystick is called before this point.
+            CASE( LSHIFT,    Y      );
+            CASE( TAB,       L      );
+            CASE( BACKSPACE, R      );
+            CASE( RETURN,    START  );
+            CASE( ESCAPE,    SELECT );
+            CASE( UP,        UP     );
+            CASE( DOWN,      DOWN   );
+            CASE( LEFT,      LEFT   );
+            CASE( RIGHT,     RIGHT  );
+            CASE( HOME,      MENU   );
+            default: break;
+        }
 
 	mInputRepeat = inputHeld;
+
+#ifdef GCW_JOYSTICK
+        if(analogJoy && !key_repeat_enabled)
+        {
+            //Update joystick position
+            if (SDL_NumJoysticks() > 0)
+            {
+                SDL_Joystick *joy;
+                joy    = SDL_JoystickOpen(0);
+                SDL_JoystickUpdate();
+                x_move = SDL_JoystickGetAxis(joy, 0);
+                y_move = SDL_JoystickGetAxis(joy, 1);
+            }
+
+            //Emulate keypresses with joystick
+            if (x_move < -deadzone || x_move > deadzone)
+            {
+                if (x_move < -deadzone) inputHeld |= SAL_INPUT_LEFT;
+                if (x_move >  deadzone) inputHeld |= SAL_INPUT_RIGHT;
+            }
+            if (y_move < -deadzone || y_move > deadzone)
+            {
+                if (y_move < -deadzone) inputHeld |= SAL_INPUT_UP;
+                if (y_move >  deadzone) inputHeld |= SAL_INPUT_DOWN;
+            }
+        }
+#endif
+
 
 #else
 	int i=0;
@@ -136,7 +187,6 @@ static u32 sal_Input(int held)
 	return inputHeld;
 }
 
-static int key_repeat_enabled = 1;
 
 u32 sal_InputPollRepeat()
 {

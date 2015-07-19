@@ -140,7 +140,6 @@ struct MENU_OPTIONS
   unsigned int spare07;
   unsigned int spare08;
   unsigned int spare09;
-
 };
 
 struct SAVE_STATE

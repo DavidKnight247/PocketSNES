@@ -35,7 +35,9 @@ static s8 mRomName[SAL_MAX_PATH]={""};
 static s8 mSystemDir[SAL_MAX_PATH];
 static struct MENU_OPTIONS *mMenuOptions=NULL;
 static u16 mTempFb[SNES_WIDTH*SNES_HEIGHT_EXTENDED];
-
+#ifdef GCW_JOYSTICK
+int analogJoy;
+#endif
 									
 void DefaultMenuOptions(void)
 {
@@ -50,6 +52,9 @@ void DefaultMenuOptions(void)
 	mMenuOptions->fullScreen=0;
 	mMenuOptions->autoSaveSram=1;
 	mMenuOptions->soundSync=1;
+#ifdef GCW_JOYSTICK
+	mMenuOptions->analogJoy=0;
+#endif
 }
 
 s32 LoadMenuOptions(const char *path, const char *filename, const char *ext,
@@ -1134,7 +1139,7 @@ void MainMenuUpdateText(s32 menu_index)
 						"Sound:                     %s",
 						mMenuOptions->soundEnabled ? " ON" : "OFF");
 			break;
-		
+
 		case MENU_SOUND_RATE:		
 			sprintf(mMenuText[MENU_SOUND_RATE],"Sound rate:              %5d",mMenuOptions->soundRate);
 			break;
@@ -1228,6 +1233,19 @@ void MainMenuUpdateText(s32 menu_index)
 			strcpy(mMenuText[MENU_ROM_SELECT],"Select ROM");
 			break;
 #endif
+#ifdef GCW_JOYSTICK
+		case MENU_ANALOG_JOY:
+			switch(mMenuOptions->analogJoy)
+			{
+				case 0:
+					strcpy(mMenuText[MENU_ANALOG_JOY],"Analogue Joystick:         OFF");
+					break;
+				case 1:
+					strcpy(mMenuText[MENU_ANALOG_JOY],"Analogue Joystick:          ON");
+					break;  
+			}
+			break;
+#endif
 	}
 }
 
@@ -1258,6 +1276,9 @@ void MainMenuUpdateTextAll(void)
 	MainMenuUpdateText(MENU_SAVE_SRAM);
 #ifndef NO_ROM_BROWSER
 	MainMenuUpdateText(MENU_ROM_SELECT);
+#endif
+#ifdef GCW_JOYSTICK
+	MainMenuUpdateText(MENU_ANALOG_JOY);
 #endif
 }
 
@@ -1445,6 +1466,7 @@ s32 MenuRun(s8 *romName)
 					action=EVENT_EXIT_APP;
 					menuExit=1;
 					break;
+
 				
 			}
 		}
@@ -1601,6 +1623,11 @@ s32 MenuRun(s8 *romName)
 					}
 					MainMenuUpdateText(MENU_FULLSCREEN);
 					break;
+				case MENU_ANALOG_JOY:
+					mMenuOptions->analogJoy^=1;
+                                        analogJoy=mMenuOptions->analogJoy;
+					MainMenuUpdateText(MENU_ANALOG_JOY);
+					break;
 			}
 		}
 
@@ -1611,6 +1638,4 @@ s32 MenuRun(s8 *romName)
 
   return action;
 }
-
-
 
