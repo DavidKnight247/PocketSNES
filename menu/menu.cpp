@@ -33,7 +33,11 @@ static struct SAVE_STATE mSaveState[10];  // holds the filenames for the savesta
 static s8 mSaveStateName[SAL_MAX_PATH]={""};       // holds the last filename to be scanned for save states
 static s8 mRomName[SAL_MAX_PATH]={""};
 static s8 mSystemDir[SAL_MAX_PATH];
+#ifdef GCW_JOYSTICK
+struct MENU_OPTIONS *mMenuOptions=NULL;
+#else
 static struct MENU_OPTIONS *mMenuOptions=NULL;
+#endif
 static u16 mTempFb[SNES_WIDTH*SNES_HEIGHT_EXTENDED];
 #ifdef GCW_JOYSTICK
 int analogJoy;
@@ -974,13 +978,14 @@ s32 SaveStateMenu(void)
 
 		if (keys & INP_BUTTON_MENU_CANCEL)
 		{
+#ifndef GCW_JOYSTICK
 			while (keys)
+#endif
 			{
 				// Draw screen:
 				menuSmooth=menuSmooth*7+(menufocus<<8); menuSmooth>>=3;
 				RenderMenu("Save States", menuCount,menuSmooth,menufocus);
 				sal_VideoFlip(1);
-
 				keys=sal_InputPoll();
 			}
 		
@@ -988,13 +993,14 @@ s32 SaveStateMenu(void)
 		}
 		else if (keys & INP_BUTTON_MENU_SELECT)
 		{
+#ifndef GCW_JOYSTICK
 			while (keys)
+#endif
 			{
 				// Draw screen:
 				menuSmooth=menuSmooth*7+(menufocus<<8); menuSmooth>>=3;
 				RenderMenu("Save States", menuCount,menuSmooth,menufocus);
 				sal_VideoFlip(1);
-
 				keys=sal_InputPoll();
 			}
 
@@ -1366,7 +1372,9 @@ s32 MenuRun(s8 *romName)
 
 		if (keys & INP_BUTTON_MENU_SELECT)
 		{
+#ifndef GCW_JOYSTICK
 			while (keys)
+#endif
 			{
 				// Draw screen:
 				menuSmooth=menuSmooth*7+(menufocus<<8); menuSmooth>>=3;
@@ -1374,7 +1382,6 @@ s32 MenuRun(s8 *romName)
 				sal_VideoFlip(1);
 
 				keys=sal_InputPoll();
-
 				usleep(10000);
 			}
 
@@ -1634,7 +1641,9 @@ s32 MenuRun(s8 *romName)
 		usleep(10000);
 	}
 	
+#ifndef GCW_JOYSTICK
   sal_InputWaitForRelease();
+#endif
 
   return action;
 }

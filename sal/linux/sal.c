@@ -7,7 +7,6 @@
 
 #ifdef GCW_JOYSTICK
 #include "menu.h"
-static int eo = 0;
 #endif
 
 #define PALETTE_BUFFER_LENGTH	256*2*4
@@ -54,15 +53,6 @@ static u32 sal_Input(int held)
 		return 0;
         }
 
-        if(analogJoy && !key_repeat_enabled)
-        {
-            //switch off all movement keys
-            inputHeld &= ~(SAL_INPUT_LEFT );
-            inputHeld &= ~(SAL_INPUT_RIGHT);
-            inputHeld &= ~(SAL_INPUT_UP   );
-            inputHeld &= ~(SAL_INPUT_DOWN );
-        }
-
         Uint8 type = (event.key.state == SDL_PRESSED);
         switch(event.key.keysym.sym) 
         {
@@ -81,12 +71,14 @@ static u32 sal_Input(int held)
             CASE( HOME,      MENU   );
             default: break;
         }
-
-	mInputRepeat = inputHeld;
-
 #ifdef GCW_JOYSTICK
         if(analogJoy && !key_repeat_enabled)
         {
+            static int j_left = 0;
+            static int j_right = 0;
+            static int j_up = 0;
+            static int j_down = 0;
+
             //Update joystick position
             if (SDL_NumJoysticks() > 0)
             {
@@ -102,15 +94,47 @@ static u32 sal_Input(int held)
             {
                 if (x_move < -deadzone) inputHeld |= SAL_INPUT_LEFT;
                 if (x_move >  deadzone) inputHeld |= SAL_INPUT_RIGHT;
+                if (x_move < -deadzone) j_left     = 1;
+                if (x_move >  deadzone) j_right    = 1;
+            } else
+            {
+                //stop movement if previously triggered by analogue stick
+                if (j_left)
+                {
+                    j_left = 0;
+                    inputHeld &= ~(SAL_INPUT_LEFT );
+                }
+                if (j_right)
+                {
+                    j_right = 0;
+                    inputHeld &= ~(SAL_INPUT_RIGHT );
+                }
             }
+
             if (y_move < -deadzone || y_move > deadzone)
             {
                 if (y_move < -deadzone) inputHeld |= SAL_INPUT_UP;
                 if (y_move >  deadzone) inputHeld |= SAL_INPUT_DOWN;
+                if (y_move < -deadzone) j_up       = 1;
+                if (y_move >  deadzone) j_down     = 1;
+            } else
+            {
+                //stop movement if previously triggered by analogue stick
+                if (j_up)
+                {
+                    j_up = 0;
+                    inputHeld &= ~(SAL_INPUT_UP );
+                }
+                if (j_down)
+                {
+                    j_down = 0;
+                    inputHeld &= ~(SAL_INPUT_DOWN );
+                }
             }
         }
 #endif
 
+	mInputRepeat = inputHeld;
 
 #else
 	int i=0;
